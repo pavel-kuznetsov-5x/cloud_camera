@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1040487199387",
+    "firebase_url": "https://prototypes-d70e9.firebaseio.com",
+    "project_id": "prototypes-d70e9",
+    "storage_bucket": "prototypes-d70e9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1040487199387:android:4fe1be1929bbffa3d74c3e",
+        "android_client_info": {
+          "package_name": "com.spqrta.cloudvideo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1040487199387-s0tfk0jr9e5eitknv1ks0mejn62ump64.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.spqrta.cloudvideo",
+            "certificate_hash": "5a70aa72f05bb9154490c61de2c03bdbf87b7da1"
+          }
+        },
+        {
+          "client_id": "1040487199387-h1cb83qtc35q9uc9e436931r977kmpf6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuHN5Cuz9lgtRQTrwzwpTa-hvT69SGxes"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1040487199387-h1cb83qtc35q9uc9e436931r977kmpf6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
