@@ -51,12 +51,10 @@ object FileUtils {
         }
     }
 
-    //todo reusables
     fun listFiles(file: File): List<File> {
         return file.listFiles()!!.toList()
     }
 
-    //todo reusables
     fun fileSizeBytes(file: File): Long {
         return file.length()
     }

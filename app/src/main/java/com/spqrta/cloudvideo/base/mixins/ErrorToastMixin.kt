@@ -16,6 +16,7 @@ interface ErrorToastMixin {
     }
 
     fun applyErrorToastMixin(exception: Throwable) {
+        exception.printStackTrace()
         Toaster.show(exception.message ?: "Unknown error")
     }
 

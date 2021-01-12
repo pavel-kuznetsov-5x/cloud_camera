@@ -1,6 +1,7 @@
 package com.spqrta.camera2demo.utility.gms
 
 import com.google.android.gms.tasks.Task
+import com.spqrta.camera2demo.utility.pure.Optional
 import io.reactivex.Single
 import io.reactivex.subjects.SingleSubject
 
@@ -11,6 +12,18 @@ fun <T> Task<T>.toSingle(): Single<T> {
     addOnCompleteListener {
         if(it.isSuccessful) {
             subject.onSuccess(it.result!!)
+        } else {
+            subject.onError(it.exception ?: TaskFailedException())
+        }
+    }
+    return subject
+}
+
+fun <T : Any?> Task<T>.toSingleNullable(): Single<Optional<T>> {
+    val subject = SingleSubject.create<Optional<T>>()
+    addOnCompleteListener {
+        if(it.isSuccessful) {
+            subject.onSuccess(Optional(it.result))
         } else {
             subject.onError(it.exception ?: TaskFailedException())
         }

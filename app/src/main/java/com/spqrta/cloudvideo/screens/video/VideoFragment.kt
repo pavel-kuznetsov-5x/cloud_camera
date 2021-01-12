@@ -225,10 +225,8 @@ class VideoFragment : BaseFragment<MainActivity>() {
         })
     }
 
-    private fun onCameraResult(result: BaseCameraWrapper.BitmapCameraResult) {
-        progressBar.hide()
-        startImageAnimation(result.bitmap)
-        updateGallery()
+    private fun onCameraResult(result: VideoCameraWrapper.FileCameraResult) {
+        mainActivity().connection.service?.onNewVideo()
     }
 
     private fun startImageAnimation(bitmap: Bitmap) {

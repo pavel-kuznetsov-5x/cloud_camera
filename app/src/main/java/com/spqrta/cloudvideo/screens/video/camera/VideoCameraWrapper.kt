@@ -19,16 +19,17 @@ class VideoCameraWrapper(
     rotation: Int = 0,
     requiredAspectRatio: Float? = null,
     requireFrontFacing: Boolean = false
-) : BaseCameraWrapper<BaseCameraWrapper.BitmapCameraResult>(
+) : BaseCameraWrapper<VideoCameraWrapper.FileCameraResult>(
     previewSurfaceProvider = previewSurfaceProvider,
     rotation = rotation,
     requiredImageAspectRatioHw = requiredAspectRatio,
     requireFrontFacing = requireFrontFacing
 ) {
 
-    override val subject = BehaviorSubject.create<BitmapCameraResult>()
+    override val subject = BehaviorSubject.create<FileCameraResult>()
 
-    private lateinit var mediaRecorder: MediaRecorder
+    private var mediaRecorder: MediaRecorder
+    private var mediaRecorderState: MediaRecorderState = MediaRecorderState.INITIAL
 
     private val filesDir = MyApplication.VIDEOS_FOLDER
 
@@ -69,6 +70,15 @@ class VideoCameraWrapper(
     fun startRecording() {
         if (cameraDevice != null && !isRecording) {
             isRecording = true
+            if(mediaRecorderState != MediaRecorderState.INITIAL) {
+                startPreview(mutableListOf<Surface>().apply {
+                    if (hasPreview) {
+                        add(previewSurfaceProvider?.invoke()!!)
+                    }
+                    add(videoSurface)
+                    setUpMediaRecorder(mediaRecorder)
+                })
+            }
             mediaRecorder.start()
         }
     }
@@ -81,19 +91,24 @@ class VideoCameraWrapper(
             } catch (e: RuntimeException) {
                 Toaster.show("Stop failed")
             }
+//            val oldFile = videoFile
+//            subject.onNext(FileCameraResult(oldFile))
             mediaRecorder.reset()
+            mediaRecorderState = MediaRecorderState.RESETTED
         }
     }
 
+    //todo to camera demo
     @Throws(IOException::class)
     private fun setUpMediaRecorder(mediaRecorder: MediaRecorder) {
-        videoFile = File(filesDir, "${LocalDateTime.now()}.mp4")
+        videoFile = File(filesDir, "${LocalDateTime.now()}lol.mp4")
         mediaRecorder.setOutputFile(videoFile.absolutePath)
 
         mediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE)
         mediaRecorder.setVideoEncodingBitRate(10000000)
 
-        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT)
+        //todo
+        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER)
 
         mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
 
@@ -107,6 +122,12 @@ class VideoCameraWrapper(
 
         mediaRecorder.setOrientationHint(calculateOrientation(rotation, characteristics.sensorOrientation))
         mediaRecorder.prepare()
+    }
+
+    class FileCameraResult(file: File)
+
+    enum class MediaRecorderState {
+        INITIAL, RESETTED
     }
 
 }

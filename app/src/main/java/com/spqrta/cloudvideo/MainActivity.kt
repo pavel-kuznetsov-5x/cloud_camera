@@ -19,34 +19,16 @@ import com.spqrta.camera2demo.base.mixins.ErrorToastMixin
 import com.spqrta.camera2demo.utility.gms.toSingle
 import com.spqrta.cloudvideo.repository.DriveRepository
 import io.reactivex.Single
+import java.lang.IllegalArgumentException
 
-
+//todo app name
 class MainActivity : NavActivity(), ErrorToastMixin {
-
-
-
 
     override val layoutRes = R.layout.activity_nav
 
-    private lateinit var service: SyncService
-    private var bound: Boolean = false
     private var driveServiceReady: Boolean = false
 
-    /** Defines callbacks for service binding, passed to bindService()  */
-    private val connection = object : ServiceConnection {
-
-        override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            // We've bound to LocalService, cast the IBinder and get LocalService instance
-            val binder = service as SyncService.MyBinder
-            this@MainActivity.service = binder.service
-            bound = true
-        }
-
-        override fun onServiceDisconnected(arg0: ComponentName) {
-            bound = false
-        }
-    }
-
+    val connection = MyConnection()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,8 +53,13 @@ class MainActivity : NavActivity(), ErrorToastMixin {
 
     override fun onStop() {
         super.onStop()
-        unbindService(connection)
-        bound = false
+        try {
+            unbindService(connection)
+        } catch (e: IllegalArgumentException) {
+            //todo
+        // java.lang.IllegalArgumentException: Service not registered: com.spqrta.cloudvideo.MainActivity$MyConnection@c35fc10
+        }
+        connection.bound = false
     }
 
     //todo empty videos on start
@@ -89,42 +76,22 @@ class MainActivity : NavActivity(), ErrorToastMixin {
         super.onActivityResult(requestCode, resultCode, resultData)
     }
 
+    inner class MyConnection : ServiceConnection {
+        var bound: Boolean = false
+        var service: SyncService? = null
 
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            this.service = (service as SyncService.MyBinder).service
+            bound = true
+        }
 
-//    private fun createFile() {
-//        if (driveServiceHelper != null) {
-//            driveServiceHelper!!.createFile()
-//                    .addOnSuccessListener { fileId -> readFile(fileId) }
-//                    .addOnFailureListener { exception ->
-//                        throw exception
-//                    }
-//        }
-//    }
-
-//    private fun readFile(fileId: String) {
-//        if (driveServiceHelper != null) {
-//            driveServiceHelper!!.readFile(fileId)
-//                    .addOnSuccessListener { nameAndContent ->
-//                        val name = nameAndContent.first
-//                        val content = nameAndContent.second
-////                        mFileTitleEditText.setText(name)
-////                        mDocContentEditText.setText(content)
-////                        setReadWriteMode(fileId)
-//                    }
-//                    .addOnFailureListener { exception ->
-//                        throw exception
-//                    }
-//        }
-//    }
-
-    private fun saveFile() {
-//        if (mDriveServiceHelper != null && mOpenFileId != null) {
-//            Log.d(MainActivity.TAG, "Saving $mOpenFileId")
-//            val fileName: String = mFileTitleEditText.getText().toString()
-//            val fileContent: String = mDocContentEditText.getText().toString()
-//            mDriveServiceHelper!!.saveFile(mOpenFileId, fileName, fileContent)
-//                    .addOnFailureListener { exception -> Log.e(MainActivity.TAG, "Unable to save file via REST.", exception) }
-//        }
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            service = null
+            bound = false
+        }
     }
+
+
+
 
 }
