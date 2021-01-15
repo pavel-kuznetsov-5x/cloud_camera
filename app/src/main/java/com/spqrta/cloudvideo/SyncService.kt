@@ -27,7 +27,6 @@ class SyncService : BaseService() {
     inner class MyBinder : Binder() {
         val service: SyncService
             get() = this@SyncService
-
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -40,6 +39,7 @@ class SyncService : BaseService() {
 
     //todo check multiple calls
     fun onInit() {
+        //todo background thread
         if(!syncing) {
             syncing = true
             DriveRepository
@@ -57,7 +57,9 @@ class SyncService : BaseService() {
                                 Logg.d(file.name)
                             }, {
                                 syncing = false
-                                throw it//todo
+                                Logg.d("error")
+//                                it.printStackTrace()
+//                                throw it//todo
                             })
                         }
                     }
@@ -72,6 +74,10 @@ class SyncService : BaseService() {
     fun onNewVideo() {
         onInit()
     }
+
+    fun onStartRecording(file: File) {}
+
+    fun onStopRecording() {}
 
     private fun createNotification(text: String = ""): Notification {
         //todo flag activity duplicates

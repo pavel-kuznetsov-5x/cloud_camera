@@ -23,20 +23,19 @@ abstract class BaseRequestManager {
     protected fun buildRetrofit() {
         val interceptor = HttpLoggingInterceptor { message ->
             if (CustomApplication.appConfig.debugMode) {
-                Logg.d(message)
-//                if(message.length < 256) {
-//                    Logg.d(message)
-//                } else {
-//                    try {
-//                        Logg.v(JSONObject(message).toString(4))
-//                    } catch (e: JSONException) {
-//                        Logg.v(message)
-//                    }
-//                }
+                if(message.length < 256) {
+                    Logg.d(message)
+                } else {
+                    try {
+                        Logg.v(JSONObject(message).toString(4))
+                    } catch (e: JSONException) {
+                        Logg.v(message)
+                    }
+                }
             }
         }
-        interceptor.level = HttpLoggingInterceptor.Level.BODY
-//        interceptor.level = HttpLoggingInterceptor.Level.BASIC
+//        interceptor.level = HttpLoggingInterceptor.Level.BODY
+        interceptor.level = HttpLoggingInterceptor.Level.BASIC
 
         val clientBuilder = OkHttpClient.Builder()
 

@@ -43,6 +43,11 @@ object Logg {
         d("\n\n"+list.joinToString("\n"))
     }
 
+    //todo reusables
+    fun thread(tag: String = "") {
+        Logg.d("$tag - ${Thread.currentThread().name}")
+    }
+
     interface LogConsumer {
         fun log(s: String, channel: Channel = Channel.V)
 

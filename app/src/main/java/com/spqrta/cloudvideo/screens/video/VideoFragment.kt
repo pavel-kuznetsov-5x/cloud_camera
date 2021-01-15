@@ -35,7 +35,7 @@ import kotlinx.android.synthetic.main.fragment_camera.view.*
 import kotlinx.android.synthetic.main.layout_gallery.*
 import java.io.File
 
-
+//todo repeated video
 class VideoFragment : BaseFragment<MainActivity>() {
 
     private val galleryAdapter = GalleryAdapter()

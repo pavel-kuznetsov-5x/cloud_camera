@@ -12,6 +12,7 @@ import java.io.File
 import java.io.IOException
 import java.lang.RuntimeException
 
+//todo sync with camerademo
 @Suppress("JoinDeclarationAndAssignment")
 @SuppressLint("NewApi")
 class VideoCameraWrapper(
@@ -95,13 +96,14 @@ class VideoCameraWrapper(
 //            subject.onNext(FileCameraResult(oldFile))
             mediaRecorder.reset()
             mediaRecorderState = MediaRecorderState.RESETTED
+            subject.onNext(FileCameraResult(videoFile))
         }
     }
 
     //todo to camera demo
     @Throws(IOException::class)
     private fun setUpMediaRecorder(mediaRecorder: MediaRecorder) {
-        videoFile = File(filesDir, "${LocalDateTime.now()}lol.mp4")
+        videoFile = File(filesDir, "${LocalDateTime.now()}.mp4")
         mediaRecorder.setOutputFile(videoFile.absolutePath)
 
         mediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE)

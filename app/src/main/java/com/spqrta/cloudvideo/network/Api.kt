@@ -2,6 +2,7 @@ package com.spqrta.cloudvideo.network
 
 import com.google.api.services.drive.model.User
 import com.spqrta.camera2demo.utility.pure.Stub
+import io.reactivex.Observable
 import io.reactivex.Single
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -19,15 +20,16 @@ interface Api {
             @Body metadata: Metadata
     ): Single<Response<Void>>
     class Metadata(
-        val name: String
+        val name: String,
+        val parents: List<String>
     )
 
     //todo to reusables
-    @PUT("/upload/drive/v3/files")
+    @PUT("--/upload/drive/v3/files")
     fun uploadFile(
             @Query("uploadType") uploadType: String = "resumable",
             @Query("upload_id") uploadId: String,
 //            @Part("metadata") metadata: RequestBody?,
             @Body file: RequestBody
-    ): Single<Response<Void>>
+    ): Observable<Response<Void>>
 }
