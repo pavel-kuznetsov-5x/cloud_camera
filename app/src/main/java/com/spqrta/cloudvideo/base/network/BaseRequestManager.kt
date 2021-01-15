@@ -24,7 +24,7 @@ abstract class BaseRequestManager {
         val interceptor = HttpLoggingInterceptor { message ->
             if (CustomApplication.appConfig.debugMode) {
                 if(message.length < 256) {
-                    Logg.d(message)
+                    Logg.v(message)
                 } else {
                     try {
                         Logg.v(JSONObject(message).toString(4))
@@ -34,8 +34,8 @@ abstract class BaseRequestManager {
                 }
             }
         }
-//        interceptor.level = HttpLoggingInterceptor.Level.BODY
-        interceptor.level = HttpLoggingInterceptor.Level.BASIC
+        interceptor.level = HttpLoggingInterceptor.Level.BODY
+//        interceptor.level = HttpLoggingInterceptor.Level.BASIC
 
         val clientBuilder = OkHttpClient.Builder()
 

@@ -25,11 +25,11 @@ interface Api {
     )
 
     //todo to reusables
-    @PUT("--/upload/drive/v3/files")
+    @PUT("/upload/drive/v3/files")
     fun uploadFile(
             @Query("uploadType") uploadType: String = "resumable",
             @Query("upload_id") uploadId: String,
 //            @Part("metadata") metadata: RequestBody?,
             @Body file: RequestBody
-    ): Observable<Response<Void>>
+    ): Single<Response<Void>>
 }

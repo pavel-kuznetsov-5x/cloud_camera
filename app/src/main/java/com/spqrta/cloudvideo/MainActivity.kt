@@ -37,6 +37,7 @@ class MainActivity : NavActivity(), ErrorToastMixin {
     }
 
     private fun onDriveServiceReady() {
+        driveServiceReady = true
         val serviceIntent = Intent(this, SyncService::class.java)
         ContextCompat.startForegroundService(this, serviceIntent)
 
@@ -55,7 +56,9 @@ class MainActivity : NavActivity(), ErrorToastMixin {
         super.onStop()
         try {
             unbindService(connection)
+            connection.service?.stopForeground(true)
         } catch (e: IllegalArgumentException) {
+            e.printStackTrace()
             //todo
         // java.lang.IllegalArgumentException: Service not registered: com.spqrta.cloudvideo.MainActivity$MyConnection@c35fc10
         }

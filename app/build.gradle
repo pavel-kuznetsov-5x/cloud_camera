@@ -28,7 +28,7 @@ android {
 
     defaultConfig {
         applicationId "com.spqrta.cloudvideo"
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -106,4 +106,5 @@ dependencies {
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.6.0'
 
     implementation("io.reactivex.rxjava2:rxkotlin:2.4.0")
+    implementation 'com.github.akarnokd:rxjava2-jdk8-interop:0.3.7'
 }

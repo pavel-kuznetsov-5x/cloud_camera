@@ -33,6 +33,7 @@ import retrofit2.Response
 import java.io.File
 import java.lang.Thread.sleep
 import io.reactivex.*
+import okhttp3.Headers
 
 
 object DriveRepository {
@@ -102,7 +103,40 @@ object DriveRepository {
     }
 
     fun saveVideo(file: File): Single<Stub> {
-//        return driveServiceHelper.createFile(file, videosFolderId).toSingle().map { Stub }
+        return driveServiceHelper.createFile(file, videosFolderId).toSingle().map { Stub }
+    }
+
+    fun getFileUploadState(file: File) {
+
+    }
+
+    fun initResumableUpload(file: File): Single<ResumableMetadata> {
+        return RequestManager.api
+                .initPartialUpload(
+                        token = "Bearer ${token}",
+                        metadata = Api.Metadata(file.name, listOf(videosFolderId))
+                )
+                .applySchedulers()
+                .map {
+                    ResumableMetadata.fromHeaders(it.headers())
+                }
+    }
+
+    fun uploadChunk(id: String, byteArray: ByteArray): Single<Stub> {
+        val fbody = RequestBody.create(MediaType.parse("video/mp4"), byteArray)
+
+        return RequestManager.api
+                .uploadFile(
+                        uploadId = id,
+                        file = fbody
+                )
+                .subscribeOn(Schedulers.io())
+                .map { Stub }
+    }
+
+    //todo  Create chunks in multiples of 256 KB (256 x 1024 bytes)
+    //todo Content-Range: bytes 0-524287/2000000 shows that you upload the first 524,288 bytes (256 x 1024 x 2) in a 2,000,000 byte file.
+    fun saveVideoResumable(file: File): Single<Stub> {
 
         Logg.d(file.size())
         val chunk_size = 1000 * 1024
@@ -117,36 +151,28 @@ object DriveRepository {
         val chunks = listOf(1, 2, 3, 4)
 
         chunks.forEachIndexed { i, c ->
-            Logg.d("${i * chunk_size} ${i * chunk_size + c - 1}")
+//            Logg.d("${i * chunk_size} ${i * chunk_size + c - 1}")
         }
 
-        return RequestManager.api
-                .initPartialUpload(
-                        token = "Bearer ${token}",
-                        metadata = Api.Metadata(file.name, listOf(videosFolderId))
-                )
-                .subscribeOn(Schedulers.io())
-                .flatMap { resp ->
+        return initResumableUpload(file)
+                .flatMap { resumableMetadata ->
                     Observable.fromIterable(chunks)
                             //todo group
                             .map { sleep(200) }
                             .flatMap {
-                                Logg.thread("Chunks")
                                 val fbody = RequestBody.create(MediaType.parse("video/mp4"), file)
 
                                 RequestManager.api
                                         .uploadFile(
-                                                uploadId = resp.headers()["x-guploader-uploadid"]!!,
+                                                uploadId = resumableMetadata.uploadId,
                                                 file = fbody
                                         )
+                                        .subscribeOn(Schedulers.io())
+                                        .toObservable()
                             }
                             .toList()
-                            .map {
-                                Logg.thread("map")
-                                Stub
-                            }
+                            .map { Stub }
                 }
-                .observeOn(AndroidSchedulers.mainThread())
 
 //
 //            .flatMap { resp ->
@@ -156,14 +182,6 @@ object DriveRepository {
 //            .subscribeOn(AndroidSchedulers.mainThread())
     }
 
-    fun <T, R> z(
-            sources: Iterable<SingleSource<out T>?>?,
-            zipper: Function<in Array<Any?>?, out R>?
-    ): Single<R>? {
-        ObjectHelper.requireNonNull(zipper, "zipper is null")
-        ObjectHelper.requireNonNull(sources, "sources is null")
-        return RxJavaPlugins.onAssembly(SingleZipIterable(sources, zipper))
-    }
 
     fun ensureFolderExists(file: File): Single<String> {
         return driveServiceHelper.searchFolder(file).toSingleNullable()
@@ -176,5 +194,16 @@ object DriveRepository {
                 }
     }
 
+    data class ResumableMetadata(
+            val uploadId: String,
+            val location: String,
+    ) {
+        companion object {
+            fun fromHeaders(headers: Headers) = ResumableMetadata(
+                    uploadId = headers["x-guploader-uploadid"]!!,
+                    location = headers["location"]!!,
+            )
+        }
+    }
 
 }

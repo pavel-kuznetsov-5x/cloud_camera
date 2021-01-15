@@ -139,6 +139,7 @@ class VideoFragment : BaseFragment<MainActivity>() {
     }
 
     override fun onPause() {
+        //todo check video
         super.onPause()
         if (cameraInitialized) {
             cameraWrapper.close()
@@ -156,9 +157,11 @@ class VideoFragment : BaseFragment<MainActivity>() {
         if (!cameraWrapper.isRecording) {
             cameraWrapper.startRecording()
             bShot.setImageResource(R.drawable.ic_shot_recording)
+            mainActivity().connection.service?.onStartRecording(cameraWrapper.videoFile)
         } else {
             cameraWrapper.stopRecording()
             bShot.setImageResource(R.drawable.ic_shot)
+            mainActivity().connection.service?.onStopRecording()
         }
     }
 

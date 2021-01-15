@@ -35,8 +35,7 @@ class VideoCameraWrapper(
     private val filesDir = MyApplication.VIDEOS_FOLDER
 
     ///storage/emulated/0/Android/data/<package>/files/pic.jpg
-    //todo recreate files?
-    private var videoFile: File = File(filesDir, "${LocalDateTime.now()}.mp4")
+    var videoFile: File = File(filesDir, "${LocalDateTime.now()}.mp4")
 
     private val videoSurface: Surface
         get() = mediaRecorder.surface
