@@ -21,19 +21,15 @@ import com.spqrta.cloudvideo.DriveServiceHelper
 import com.spqrta.cloudvideo.MainActivity
 import com.spqrta.cloudvideo.network.Api
 import com.spqrta.cloudvideo.network.RequestManager
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.functions.Function
-import io.reactivex.internal.functions.ObjectHelper
-import io.reactivex.internal.operators.single.SingleZipIterable
-import io.reactivex.plugins.RxJavaPlugins
 import io.reactivex.schedulers.Schedulers
 import okhttp3.MediaType
 import okhttp3.RequestBody
-import retrofit2.Response
 import java.io.File
 import java.lang.Thread.sleep
 import io.reactivex.*
 import okhttp3.Headers
+import retrofit2.HttpException
+import java.lang.Exception
 
 
 object DriveRepository {
@@ -122,64 +118,22 @@ object DriveRepository {
                 }
     }
 
-    fun uploadChunk(id: String, byteArray: ByteArray): Single<Stub> {
+    fun uploadChunk(uploadId: String, byteArray: ByteArray, offset: Long, finalSize: Long? = null): Single<Stub> {
         val fbody = RequestBody.create(MediaType.parse("video/mp4"), byteArray)
 
         return RequestManager.api
-                .uploadFile(
-                        uploadId = id,
+                .uploadChunk(
+                        contentRange = Api.formatContentRange(offset, offset+byteArray.size.toLong()-1, finalSize),
+                        uploadId = uploadId,
                         file = fbody
                 )
                 .subscribeOn(Schedulers.io())
-                .map { Stub }
-    }
-
-    //todo  Create chunks in multiples of 256 KB (256 x 1024 bytes)
-    //todo Content-Range: bytes 0-524287/2000000 shows that you upload the first 524,288 bytes (256 x 1024 x 2) in a 2,000,000 byte file.
-    fun saveVideoResumable(file: File): Single<Stub> {
-
-        Logg.d(file.size())
-        val chunk_size = 1000 * 1024
-//        val chunks = mutableListOf<Long>()
-//        for (i in 0..file.size() / chunk_size) {
-//            if (i != file.size() / chunk_size) {
-//                chunks.add(chunk_size.toLong())
-//            } else {
-//                chunks.add(file.size() % chunk_size)
-//            }
-//        }
-        val chunks = listOf(1, 2, 3, 4)
-
-        chunks.forEachIndexed { i, c ->
-//            Logg.d("${i * chunk_size} ${i * chunk_size + c - 1}")
-        }
-
-        return initResumableUpload(file)
-                .flatMap { resumableMetadata ->
-                    Observable.fromIterable(chunks)
-                            //todo group
-                            .map { sleep(200) }
-                            .flatMap {
-                                val fbody = RequestBody.create(MediaType.parse("video/mp4"), file)
-
-                                RequestManager.api
-                                        .uploadFile(
-                                                uploadId = resumableMetadata.uploadId,
-                                                file = fbody
-                                        )
-                                        .subscribeOn(Schedulers.io())
-                                        .toObservable()
-                            }
-                            .toList()
-                            .map { Stub }
+                .doOnSuccess {
+                    if(!it.isSuccessful && it.code() != 308) {
+                        throw Exception("${it.raw().request().headers()["Content-Range"]} | ${it.errorBody()!!.string()}")
+                    }
                 }
-
-//
-//            .flatMap { resp ->
-//
-//                    .subscribeOn(AndroidSchedulers.mainThread())
-//            }
-//            .subscribeOn(AndroidSchedulers.mainThread())
+                .map { Stub }
     }
 
 

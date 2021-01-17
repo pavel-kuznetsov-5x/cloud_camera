@@ -26,10 +26,22 @@ interface Api {
 
     //todo to reusables
     @PUT("/upload/drive/v3/files")
-    fun uploadFile(
+    fun uploadChunk(
+            @Header("Content-Range")  contentRange: String,
             @Query("uploadType") uploadType: String = "resumable",
             @Query("upload_id") uploadId: String,
 //            @Part("metadata") metadata: RequestBody?,
             @Body file: RequestBody
     ): Single<Response<Void>>
+
+    companion object {
+        fun formatContentRange(start: Long, end: Long, total: Long? = null): String {
+            if(total != null) {
+                return "bytes $start-$end/$total"
+            } else {
+                return "bytes $start-$end/*"
+            }
+        }
+    }
+
 }

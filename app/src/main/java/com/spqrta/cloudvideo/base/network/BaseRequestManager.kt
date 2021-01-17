@@ -20,30 +20,34 @@ abstract class BaseRequestManager {
         buildRetrofit()
     }
 
+    //todo reusables
     protected fun buildRetrofit() {
-        val interceptor = HttpLoggingInterceptor { message ->
+        val loggingInterceptor = HttpLoggingInterceptor { message ->
             if (CustomApplication.appConfig.debugMode) {
-                if(message.length < 256) {
-                    Logg.v(message)
-                } else {
-                    try {
-                        Logg.v(JSONObject(message).toString(4))
-                    } catch (e: JSONException) {
-                        Logg.v(message)
-                    }
-                }
+                Logg.v(message)
+//                if(message.length < 256) {
+//                    if(message.contains("-->") or message.contains("<--")) {
+//                        Logg.d(message)
+//                    } else {
+//                        Logg.v(message)
+//                    }
+//                } else {
+//                    try {
+//                        Logg.v(JSONObject(message).toString(4))
+//                    } catch (e: JSONException) {
+//                        Logg.v(message)
+//                    }
+//                }
             }
         }
-        interceptor.level = HttpLoggingInterceptor.Level.BODY
-//        interceptor.level = HttpLoggingInterceptor.Level.BASIC
+        loggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
 
         val clientBuilder = OkHttpClient.Builder()
 
         buildClient(clientBuilder)
         if (CustomApplication.appConfig.debugMode) {
-            clientBuilder.addInterceptor(interceptor)
+            clientBuilder.addInterceptor(loggingInterceptor)
         }
-
 
         val client = clientBuilder
             .build()

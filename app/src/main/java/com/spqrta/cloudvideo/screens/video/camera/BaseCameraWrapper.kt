@@ -330,7 +330,7 @@ abstract class BaseCameraWrapper<T>(
         return requestBuilder
     }
 
-    private fun createCaptureSession(
+    protected fun createCaptureSession(
         cameraDevice: CameraDevice,
         surfaces: List<Surface>
     ): Single<CameraCaptureSession> {
