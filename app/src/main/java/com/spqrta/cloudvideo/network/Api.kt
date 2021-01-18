@@ -24,13 +24,20 @@ interface Api {
         val parents: List<String>
     )
 
-    //todo to reusables
+    //todo multipart to reusables
     @PUT("/upload/drive/v3/files")
     fun uploadChunk(
             @Header("Content-Range")  contentRange: String,
             @Query("uploadType") uploadType: String = "resumable",
             @Query("upload_id") uploadId: String,
-//            @Part("metadata") metadata: RequestBody?,
+            @Body file: RequestBody
+    ): Single<Response<Void>>
+
+    @PATCH("/upload/drive/v3/files")
+    fun editChunk(
+            @Header("Content-Range")  contentRange: String,
+            @Query("uploadType") uploadType: String = "resumable",
+            @Query("upload_id") uploadId: String,
             @Body file: RequestBody
     ): Single<Response<Void>>
 

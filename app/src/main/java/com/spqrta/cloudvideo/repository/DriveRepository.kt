@@ -118,18 +118,32 @@ object DriveRepository {
                 }
     }
 
-    fun uploadChunk(uploadId: String, byteArray: ByteArray, offset: Long, finalSize: Long? = null): Single<Stub> {
+    fun uploadChunk(
+            uploadId: String,
+            byteArray: ByteArray,
+            offset: Long,
+            finalSize: Long? = null,
+            edit: Boolean = false
+    ): Single<Stub> {
         val fbody = RequestBody.create(MediaType.parse("video/mp4"), byteArray)
 
-        return RequestManager.api
-                .uploadChunk(
-                        contentRange = Api.formatContentRange(offset, offset+byteArray.size.toLong()-1, finalSize),
-                        uploadId = uploadId,
-                        file = fbody
-                )
+        val contentRange = Api.formatContentRange(
+                offset, offset + byteArray.size.toLong() - 1, finalSize)
+
+        return if(edit) {
+            RequestManager.api
+                    .editChunk(
+                            contentRange = contentRange, uploadId = uploadId, file = fbody
+                    )
+        } else {
+            RequestManager.api
+                    .uploadChunk(
+                            contentRange = contentRange, uploadId = uploadId, file = fbody
+                    )
+        }
                 .subscribeOn(Schedulers.io())
                 .doOnSuccess {
-                    if(!it.isSuccessful && it.code() != 308) {
+                    if (!it.isSuccessful && it.code() != 308) {
                         throw Exception("${it.raw().request().headers()["Content-Range"]} | ${it.errorBody()!!.string()}")
                     }
                 }

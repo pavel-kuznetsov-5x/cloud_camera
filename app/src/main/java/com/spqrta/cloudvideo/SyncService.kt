@@ -75,76 +75,97 @@ class SyncService : BaseService() {
         }
         val handler = Handler(syncThread!!.looper)
         handler.post {
-            if (isRecording) {
-                //check if recording upload initialized
-                if (recordUploadId == null) {
-                    //todo handle error
-                    Logg.d("init recording upload")
-                    recordUploadId = DriveRepository.initResumableUpload(recordingFile!!).blockingGet().uploadId
+            handleSyncMessage(handler)
+//            val unsyncedVideos = AppRepository.getUnsyncedVideos()
+//            val id = DriveRepository.initResumableUpload(unsyncedVideos[0]).blockingGet().uploadId
+//            DriveRepository.uploadChunk(
+//                    id, ByteArray(262144) { 0x00.toByte() },
+//                    0,
+//                    finalSize = null
+//            ).blockingGet()
+//            DriveRepository.uploadChunk(
+//                    id, ByteArray(262144) { 0x01.toByte() },
+//                    262144,
+//                    finalSize = 262144*2
+//            ).blockingGet()
+//            DriveRepository.uploadChunk(
+//                    id, byteArrayOf(0xA3.toByte()),
+//                    0,
+//                    edit = true
+//            ).blockingGet()
+        }
+    }
+
+    private fun handleSyncMessage(handler: Handler) {
+        if (isRecording) {
+            //check if recording upload initialized
+            if (recordUploadId == null) {
+                //todo handle error
+                Logg.d("init recording upload")
+                recordUploadId = DriveRepository.initResumableUpload(recordingFile!!).blockingGet().uploadId
+                handler.post {
+                    initSync()
+                }
+            } else {
+                val fileSize = recordingFile!!.size()
+                Logg.d("$bytesLoaded / ${fileSize} : ${(bytesLoaded.toFloat() / fileSize * 100).toInt()}%")
+                if (fileSize - bytesLoaded > CHUNK_SIZE) {
+                    Logg.d("uploading chunk")
+                    uploadFileChunk(recordingFile!!, bytesLoaded, CHUNK_SIZE)
+                    bytesLoaded += CHUNK_SIZE
                     handler.post {
                         initSync()
                     }
                 } else {
-                    val fileSize = recordingFile!!.size()
-                    Logg.d("$bytesLoaded / ${fileSize} : ${(bytesLoaded.toFloat() / fileSize * 100).toInt()}%")
+                    Logg.d("pass")
+                    //wait till recording file will be bigger than one chunk
+                    handler.postDelayed({
+                        initSync()
+                    }, 1000)
+                }
+            }
+        } else {
+            //check if recording upload not finished yet
+            if (recordingFile != null || recordUploadId != null) {
+                val fileSize = recordingFile!!.size()
+                if (bytesLoaded < fileSize) {
+                    Logg.d("upload remaining recording chunk")
                     if (fileSize - bytesLoaded > CHUNK_SIZE) {
-                        Logg.d("uploading chunk")
-                        uploadFileChunk(recordingFile!!, bytesLoaded, CHUNK_SIZE)
+                        uploadFileChunk(recordingFile!!, bytesLoaded, CHUNK_SIZE, final = false)
                         bytesLoaded += CHUNK_SIZE
                         handler.post {
                             initSync()
                         }
                     } else {
-                        Logg.d("pass")
-                        //wait till recording file will be bigger than one chunk
-                        handler.postDelayed({
-                            initSync()
-                        }, 1000)
-                    }
-                }
-            } else {
-                //check if recording upload not finished yet
-                if (recordingFile != null || recordUploadId != null) {
-                    val fileSize = recordingFile!!.size()
-                    if (bytesLoaded < fileSize) {
-                        Logg.d("upload remaining recording chunk")
-                        if (fileSize - bytesLoaded > CHUNK_SIZE) {
-                            uploadFileChunk(recordingFile!!, bytesLoaded, CHUNK_SIZE, final = false)
-                            bytesLoaded += CHUNK_SIZE
-                            handler.post {
-                                initSync()
-                            }
-                        } else {
-                            Logg.d("upload remaining recording final chunk")
-                            val size = fileSize - bytesLoaded
-                            uploadFileChunk(recordingFile!!, bytesLoaded, size, final = true)
-                            finishRecordingUpload()
-                            handler.post {
-                                initSync()
-                            }
-                        }
-                    } else {
+                        uploadFinalChunkAndMoov(recordingFile!!)
                         finishRecordingUpload()
                         handler.post {
                             initSync()
                         }
                     }
                 } else {
-                    Logg.d("sync other videos")
-                    val unsyncedVideos = AppRepository.getUnsyncedVideos()
-                    if (unsyncedVideos.isNotEmpty()) {
-                        unsyncedVideos
-                                .sortedBy {
-                                    LocalDateTime.parse(it.name.split(".")[0])
-                                }
-                                .forEach {
-                                    //todo check if already synced
-                                    syncVideo(it)
-                                }
-                    } else {
-                        syncThread!!.looper.quitSafely()
-                        syncThread = null
+                    //todo upload moov
+//                    uploadMoov(recordingFile!!)
+                    finishRecordingUpload()
+                    handler.post {
+                        initSync()
                     }
+                }
+            } else {
+                Logg.d("sync other videos")
+                val unsyncedVideos = AppRepository.getUnsyncedVideos()
+                if (unsyncedVideos.isNotEmpty()) {
+                    unsyncedVideos
+                            .sortedBy {
+                                LocalDateTime.parse(it.name.split(".")[0])
+                            }
+                            .forEach {
+                                //todo check if already synced
+                                syncVideo(it)
+                            }
+                } else {
+                    syncThread!!.looper.quitSafely()
+                    syncThread = null
                 }
             }
         }
@@ -159,44 +180,39 @@ class SyncService : BaseService() {
         //todo
     }
 
-    //todo check multiple calls
-//    fun onInit() {
-//        //todo background thread
-//        if(!syncing) {
-//            syncing = true
-//            DriveRepository
-//                .getDriveVideos()
-//                .subscribeManaged({ driveVideos ->
-//                    val videos = AppRepository.getVideos()
-////                    Logg.logListMultiline(driveVideos.files)
-////                    Logg.logListMultiline(videos)
-//                    val text = "${videos.size} files, \n ${driveVideos.files.size} drive files"
-//                    notificationManager.notify(CODE, createNotification(text))
-//
-//                    videos.forEach { file ->
-//                        if (file.name !in driveVideos.files.map { it.name }) {
-//                            DriveRepository.saveVideo(file).subscribeManaged({
-//                                Logg.d(file.name)
-//                            }, {
-//                                syncing = false
-//                                Logg.d("error")
-////                                it.printStackTrace()
-////                                throw it//todo
-//                            })
-//                        }
-//                    }
-//                    syncing = false
-//                }, {
-//                    syncing = false
-//                    throw it//todo
-//                })
-//        }
-//    }
+    private fun uploadFinalChunkAndMoov(file: File) {
+        val moov = readMoov(file)
 
+        FileInputStream(file).use { stream ->
+            stream.channel.position(bytesLoaded)
+
+            val bytes = ByteArray((file.size() - bytesLoaded).toInt())
+            val res = stream.read(bytes)
+            check(res == bytes.size)
+            try {
+                DriveRepository.uploadChunk(
+                        recordUploadId!!, bytes + moov,
+                        bytesLoaded,
+                        file.size() + moov.size
+                ).blockingGet()
+            } catch (e: Exception) {
+                //todo retry on error
+                if (e is HttpException) {
+                    Logg.e(e.response()!!.errorBody()!!.string())
+                } else {
+                    Logg.e(e.toString())
+                }
+            }
+        }
+
+
+    }
+
+    //todo check error loop
     @SuppressLint("CheckResult")
     private fun uploadFileChunk(file: File, start: Long, chunkSize: Long, final: Boolean = false) {
         FileInputStream(file).use { stream ->
-            stream.channel.position(bytesLoaded)
+            stream.channel.position(start)
 
             val bytes = ByteArray(size = (if (final) {
                 file.size() - start
@@ -208,9 +224,9 @@ class SyncService : BaseService() {
             try {
                 DriveRepository.uploadChunk(
                         recordUploadId!!, bytes,
-                        bytesLoaded,
+                        start,
                         finalSize = if (final) {
-                            recordingFile!!.size()
+                            file.size()
                         } else {
                             null
                         }
@@ -222,6 +238,38 @@ class SyncService : BaseService() {
                 } else {
                     Logg.e(e.toString())
                 }
+            }
+        }
+    }
+
+
+    private fun readMoov(file: File): ByteArray {
+        var moovIndex = -1L
+        var mdatIndex = -1L
+        FileInputStream(file).use { stream ->
+            val bytes = ByteArray(4)
+            for (i in 0..file.size()) {
+                stream.channel.position(i)
+                stream.read(bytes)
+                if(bytes.contentEquals("MOOV not found: free".toByteArray())) {
+                    throw Exception("free")
+                }
+                if(bytes.contentEquals("moov".toByteArray())) {
+                    moovIndex = i - 4
+                }
+                if(bytes.contentEquals("mdat".toByteArray())) {
+                    mdatIndex = i - 4
+                    break
+                }
+            }
+
+            if(moovIndex != -1L && mdatIndex != -1L) {
+                val bytes1 = ByteArray((mdatIndex-moovIndex).toInt())
+                stream.channel.position(moovIndex)
+                stream.read(bytes1)
+                return bytes1
+            } else {
+                throw Exception("MOOV or mdat not found")
             }
         }
     }
