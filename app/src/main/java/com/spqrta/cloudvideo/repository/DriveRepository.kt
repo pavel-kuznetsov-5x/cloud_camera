@@ -11,10 +11,8 @@ import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.google.api.services.drive.model.FileList
-import com.spqrta.camera2demo.utility.Logg
 import com.spqrta.camera2demo.utility.gms.toSingle
 import com.spqrta.camera2demo.utility.gms.toSingleNullable
-import com.spqrta.camera2demo.utility.pure.FileUtils.size
 import com.spqrta.camera2demo.utility.pure.Stub
 import com.spqrta.camera2demo.utility.utils.applySchedulers
 import com.spqrta.cloudvideo.DriveServiceHelper
@@ -25,10 +23,8 @@ import io.reactivex.schedulers.Schedulers
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import java.io.File
-import java.lang.Thread.sleep
 import io.reactivex.*
 import okhttp3.Headers
-import retrofit2.HttpException
 import java.lang.Exception
 
 
@@ -38,7 +34,7 @@ object DriveRepository {
 
     private lateinit var driveServiceHelper: DriveServiceHelper
 
-    private lateinit var videosFolderId: String
+    lateinit var videosFolderId: String
 
     //todo secure
     private lateinit var token: String
@@ -106,11 +102,11 @@ object DriveRepository {
 
     }
 
-    fun initResumableUpload(file: File): Single<ResumableMetadata> {
+    fun initResumableUpload(file: File, parentId: String?): Single<ResumableMetadata> {
         return RequestManager.api
                 .initPartialUpload(
                         token = "Bearer ${token}",
-                        metadata = Api.Metadata(file.name, listOf(videosFolderId))
+                        metadata = Api.Metadata(file.name, listOf(parentId ?: videosFolderId))
                 )
                 .applySchedulers()
                 .map {
@@ -150,18 +146,18 @@ object DriveRepository {
                 .map { Stub }
     }
 
-    fun uploadFileBytes(name: String, bytes: ByteArray): Single<Stub> {
-        return initResumableUpload(File(name))
+    fun uploadFileBytes(name: String, bytes: ByteArray, parentId: String?): Single<Stub> {
+        return initResumableUpload(File(name), parentId)
                 .flatMap {
                     uploadChunk(it.uploadId, bytes, 0, bytes.size.toLong())
                 }
     }
 
-    fun ensureFolderExists(file: File): Single<String> {
-        return driveServiceHelper.searchFolder(file).toSingleNullable()
+    fun ensureFolderExists(file: File, parentId: String? = null): Single<String> {
+        return driveServiceHelper.searchFolder(file, parentId).toSingleNullable()
                 .flatMap {
                     if (it.isEmpty) {
-                        driveServiceHelper.createFolder(file).toSingle()
+                        driveServiceHelper.createFolder(file, parentId).toSingle()
                     } else {
                         Single.just(it.get())
                     }

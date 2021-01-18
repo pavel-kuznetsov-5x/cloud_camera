@@ -47,12 +47,18 @@ public class DriveServiceHelper {
         this.driveService = driveService;
     }
 
-    public Task<String> createFolder(java.io.File file) {
+    public Task<String> createFolder(java.io.File file, String parentId) {
         return Tasks.call(mExecutor, () -> {
             File metadata = new File()
-                    .setParents(Collections.singletonList("root"))
+
                     .setMimeType("application/vnd.google-apps.folder")
                     .setName(file.getName());
+
+            if(parentId == null) {
+                metadata.setParents(Collections.singletonList("root"));
+            } else  {
+                metadata.setParents(Collections.singletonList(parentId));
+            }
 
             File googleFile = driveService.files().create(metadata).execute();
             if (googleFile == null) {
@@ -63,16 +69,22 @@ public class DriveServiceHelper {
         });
     }
 
-    public Task<String> searchFolder(java.io.File file) {
+    public Task<String> searchFolder(java.io.File file, String parentId) {
         return Tasks.call(mExecutor, () -> {
             String pageToken = null;
             do {
-                FileList result = driveService.files().list()
-                        .setQ("name='" + file.getName() + "'")
+                Drive.Files.List list = driveService.files().list()
                         .setSpaces("drive")
                         .setFields("nextPageToken, files(id, name, capabilities)")
-                        .setPageToken(pageToken)
-                        .execute();
+                        .setPageToken(pageToken);
+
+                if(parentId != null) {
+                    list.setQ("name='" + file.getName() + "' and '" + parentId + "' in parents and trashed = false");
+                } else  {
+                    list.setQ("name='" + file.getName() + "' and trashed = false");
+                }
+
+                FileList result = list.execute();
 
                 for (File f : result.getFiles()) {
                     if (f.getCapabilities().getCanAddChildren()) {

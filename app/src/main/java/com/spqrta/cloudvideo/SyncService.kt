@@ -16,6 +16,7 @@ import retrofit2.HttpException
 import java.io.File
 import java.io.FileInputStream
 
+//todo risk tests
 //todo test long video
 class SyncService : BaseService() {
 
@@ -42,7 +43,7 @@ class SyncService : BaseService() {
     private var syncThread: HandlerThread? = null
 
     private var isRecording = false
-    private var recordUploadId: String? = null
+    private var recordFolderId: String? = null
     private var recordingFile: File? = null
     private var bytesLoaded = 0L
 
@@ -85,10 +86,13 @@ class SyncService : BaseService() {
     private fun handleSyncMessage(handler: Handler) {
         if (isRecording) {
             //check if recording upload initialized
-            if (recordUploadId == null) {
+            if (recordFolderId == null) {
                 //todo handle error
-                Logg.d("init recording upload")
-                recordUploadId = DriveRepository.initResumableUpload(recordingFile!!).blockingGet().uploadId
+                recordFolderId = DriveRepository.ensureFolderExists(
+                        File(recordingFile!!.name.replace(".mp4", "")),
+                        parentId = DriveRepository.videosFolderId
+                ).blockingGet()
+                Logg.d("recording folder created")
                 handler.post {
                     initSync()
                 }
@@ -103,7 +107,7 @@ class SyncService : BaseService() {
                         partsLoaded = 1
                     } else {
                         Logg.d("uploading chunk")
-                        uploadFilePart(recordingFile!!, partsLoaded, bytesLoaded, CHUNK_SIZE)
+                        uploadFilePart(recordingFile!!, partsLoaded, bytesLoaded, CHUNK_SIZE, recordFolderId!!)
                         partsLoaded++
                         bytesLoaded += CHUNK_SIZE
                     }
@@ -120,19 +124,19 @@ class SyncService : BaseService() {
             }
         } else {
             //check if recording upload not finished yet
-            if (recordingFile != null || recordUploadId != null) {
+            if (recordingFile != null || recordFolderId != null) {
                 val fileSize = recordingFile!!.size()
                 if (bytesLoaded < fileSize) {
                     Logg.d("upload remaining recording chunk")
                     if (fileSize - bytesLoaded > CHUNK_SIZE) {
-                        uploadFilePart(recordingFile!!, partsLoaded, bytesLoaded, CHUNK_SIZE)
+                        uploadFilePart(recordingFile!!, partsLoaded, bytesLoaded, CHUNK_SIZE, recordFolderId!!)
                         partsLoaded++
                         bytesLoaded += CHUNK_SIZE
                         handler.post {
                             initSync()
                         }
                     } else {
-                        uploadFilePart(recordingFile!!, partsLoaded, bytesLoaded, fileSize - bytesLoaded)
+                        uploadFilePart(recordingFile!!, partsLoaded, bytesLoaded, fileSize - bytesLoaded, recordFolderId!!)
                         uploadFirstChunk(recordingFile!!)
                         finishRecordingUpload()
                         handler.post {
@@ -168,7 +172,7 @@ class SyncService : BaseService() {
 
     private fun finishRecordingUpload() {
         recordingFile = null
-        recordUploadId = null
+        recordFolderId = null
     }
 
     private fun syncVideo(file: File) {
@@ -177,11 +181,11 @@ class SyncService : BaseService() {
 
     private fun uploadFirstChunk(file: File) {
         val mdat = Mp4Utils.findMdat(file)
-        uploadFilePart(file, 0, 0, mdat + Mp4Utils.BOX_SIZE_OFFSET)
+        uploadFilePart(file, 0, 0, mdat + Mp4Utils.BOX_SIZE_OFFSET, recordFolderId!!)
     }
 
     @SuppressLint("CheckResult")
-    private fun uploadFilePart(file: File, part: Int, start: Long, chunkSize: Long) {
+    private fun uploadFilePart(file: File, part: Int, start: Long, chunkSize: Long, parentId: String) {
         FileInputStream(file).use { stream ->
             stream.channel.position(start)
 
@@ -191,7 +195,8 @@ class SyncService : BaseService() {
             try {
                 DriveRepository.uploadFileBytes(
                         file.name.split(".")[0] + "_part${part + 1}",
-                        bytes
+                        bytes,
+                        parentId
                 ).blockingGet()
             } catch (e: Exception) {
                 //todo retry on error
@@ -220,7 +225,7 @@ class SyncService : BaseService() {
             check(res == bytes.size)
             try {
                 DriveRepository.uploadChunk(
-                        recordUploadId!!, bytes,
+                        recordFolderId!!, bytes,
                         start,
                         finalSize = if (final) {
                             file.size()
