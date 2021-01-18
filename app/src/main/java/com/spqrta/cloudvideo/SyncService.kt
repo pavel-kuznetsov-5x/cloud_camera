@@ -46,6 +46,9 @@ class SyncService : BaseService() {
     private var recordingFile: File? = null
     private var bytesLoaded = 0L
 
+    //todo clear
+    private var partsLoaded = 0
+
     ///////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////
@@ -76,23 +79,6 @@ class SyncService : BaseService() {
         val handler = Handler(syncThread!!.looper)
         handler.post {
             handleSyncMessage(handler)
-//            val unsyncedVideos = AppRepository.getUnsyncedVideos()
-//            val id = DriveRepository.initResumableUpload(unsyncedVideos[0]).blockingGet().uploadId
-//            DriveRepository.uploadChunk(
-//                    id, ByteArray(262144) { 0x00.toByte() },
-//                    0,
-//                    finalSize = null
-//            ).blockingGet()
-//            DriveRepository.uploadChunk(
-//                    id, ByteArray(262144) { 0x01.toByte() },
-//                    262144,
-//                    finalSize = 262144*2
-//            ).blockingGet()
-//            DriveRepository.uploadChunk(
-//                    id, byteArrayOf(0xA3.toByte()),
-//                    0,
-//                    edit = true
-//            ).blockingGet()
         }
     }
 
@@ -110,9 +96,17 @@ class SyncService : BaseService() {
                 val fileSize = recordingFile!!.size()
                 Logg.d("$bytesLoaded / ${fileSize} : ${(bytesLoaded.toFloat() / fileSize * 100).toInt()}%")
                 if (fileSize - bytesLoaded > CHUNK_SIZE) {
-                    Logg.d("uploading chunk")
-                    uploadFileChunk(recordingFile!!, bytesLoaded, CHUNK_SIZE)
-                    bytesLoaded += CHUNK_SIZE
+                    if (bytesLoaded == 0L) {
+                        Logg.d("skipping first chunk")
+                        val mdatPosition = Mp4Utils.findMdat(recordingFile!!)
+                        bytesLoaded = Mp4Utils.BOX_SIZE_OFFSET + mdatPosition
+                        partsLoaded = 1
+                    } else {
+                        Logg.d("uploading chunk")
+                        uploadFilePart(recordingFile!!, partsLoaded, bytesLoaded, CHUNK_SIZE)
+                        partsLoaded++
+                        bytesLoaded += CHUNK_SIZE
+                    }
                     handler.post {
                         initSync()
                     }
@@ -131,21 +125,22 @@ class SyncService : BaseService() {
                 if (bytesLoaded < fileSize) {
                     Logg.d("upload remaining recording chunk")
                     if (fileSize - bytesLoaded > CHUNK_SIZE) {
-                        uploadFileChunk(recordingFile!!, bytesLoaded, CHUNK_SIZE, final = false)
+                        uploadFilePart(recordingFile!!, partsLoaded, bytesLoaded, CHUNK_SIZE)
+                        partsLoaded++
                         bytesLoaded += CHUNK_SIZE
                         handler.post {
                             initSync()
                         }
                     } else {
-                        uploadFinalChunkAndMoov(recordingFile!!)
+                        uploadFilePart(recordingFile!!, partsLoaded, bytesLoaded, fileSize - bytesLoaded)
+                        uploadFirstChunk(recordingFile!!)
                         finishRecordingUpload()
                         handler.post {
                             initSync()
                         }
                     }
                 } else {
-                    //todo upload moov
-//                    uploadMoov(recordingFile!!)
+                    uploadFirstChunk(recordingFile!!)
                     finishRecordingUpload()
                     handler.post {
                         initSync()
@@ -180,20 +175,23 @@ class SyncService : BaseService() {
         //todo
     }
 
-    private fun uploadFinalChunkAndMoov(file: File) {
-        val moov = readMoov(file)
+    private fun uploadFirstChunk(file: File) {
+        val mdat = Mp4Utils.findMdat(file)
+        uploadFilePart(file, 0, 0, mdat + Mp4Utils.BOX_SIZE_OFFSET)
+    }
 
+    @SuppressLint("CheckResult")
+    private fun uploadFilePart(file: File, part: Int, start: Long, chunkSize: Long) {
         FileInputStream(file).use { stream ->
-            stream.channel.position(bytesLoaded)
+            stream.channel.position(start)
 
-            val bytes = ByteArray((file.size() - bytesLoaded).toInt())
+            val bytes = ByteArray(chunkSize.toInt())
             val res = stream.read(bytes)
             check(res == bytes.size)
             try {
-                DriveRepository.uploadChunk(
-                        recordUploadId!!, bytes + moov,
-                        bytesLoaded,
-                        file.size() + moov.size
+                DriveRepository.uploadFileBytes(
+                        file.name.split(".")[0] + "_part${part + 1}",
+                        bytes
                 ).blockingGet()
             } catch (e: Exception) {
                 //todo retry on error
@@ -204,13 +202,12 @@ class SyncService : BaseService() {
                 }
             }
         }
-
-
     }
 
     //todo check error loop
+    @Deprecated("")
     @SuppressLint("CheckResult")
-    private fun uploadFileChunk(file: File, start: Long, chunkSize: Long, final: Boolean = false) {
+    private fun uploadResumableChunk(file: File, start: Long, chunkSize: Long, final: Boolean = false) {
         FileInputStream(file).use { stream ->
             stream.channel.position(start)
 
@@ -238,38 +235,6 @@ class SyncService : BaseService() {
                 } else {
                     Logg.e(e.toString())
                 }
-            }
-        }
-    }
-
-
-    private fun readMoov(file: File): ByteArray {
-        var moovIndex = -1L
-        var mdatIndex = -1L
-        FileInputStream(file).use { stream ->
-            val bytes = ByteArray(4)
-            for (i in 0..file.size()) {
-                stream.channel.position(i)
-                stream.read(bytes)
-                if(bytes.contentEquals("MOOV not found: free".toByteArray())) {
-                    throw Exception("free")
-                }
-                if(bytes.contentEquals("moov".toByteArray())) {
-                    moovIndex = i - 4
-                }
-                if(bytes.contentEquals("mdat".toByteArray())) {
-                    mdatIndex = i - 4
-                    break
-                }
-            }
-
-            if(moovIndex != -1L && mdatIndex != -1L) {
-                val bytes1 = ByteArray((mdatIndex-moovIndex).toInt())
-                stream.channel.position(moovIndex)
-                stream.read(bytes1)
-                return bytes1
-            } else {
-                throw Exception("MOOV or mdat not found")
             }
         }
     }

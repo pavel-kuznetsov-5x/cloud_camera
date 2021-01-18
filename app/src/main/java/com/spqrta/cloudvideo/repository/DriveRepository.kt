@@ -130,7 +130,7 @@ object DriveRepository {
         val contentRange = Api.formatContentRange(
                 offset, offset + byteArray.size.toLong() - 1, finalSize)
 
-        return if(edit) {
+        return if (edit) {
             RequestManager.api
                     .editChunk(
                             contentRange = contentRange, uploadId = uploadId, file = fbody
@@ -150,6 +150,12 @@ object DriveRepository {
                 .map { Stub }
     }
 
+    fun uploadFileBytes(name: String, bytes: ByteArray): Single<Stub> {
+        return initResumableUpload(File(name))
+                .flatMap {
+                    uploadChunk(it.uploadId, bytes, 0, bytes.size.toLong())
+                }
+    }
 
     fun ensureFolderExists(file: File): Single<String> {
         return driveServiceHelper.searchFolder(file).toSingleNullable()
