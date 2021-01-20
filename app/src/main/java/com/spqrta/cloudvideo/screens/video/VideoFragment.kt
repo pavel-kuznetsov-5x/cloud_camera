@@ -12,7 +12,6 @@ import android.widget.FrameLayout
 import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.GridLayoutManager
-import com.spqrta.camera2demo.*
 import com.spqrta.camera2demo.base.delegates.StateDelegate
 import com.spqrta.camera2demo.base.display.BaseFragment
 import com.spqrta.camera2demo.camera.BaseCameraWrapper
@@ -25,7 +24,7 @@ import com.spqrta.camera2demo.utility.pure.*
 import com.spqrta.cloudvideo.MainActivity
 import com.spqrta.cloudvideo.MyApplication
 import com.spqrta.cloudvideo.R
-import com.spqrta.cloudvideo.repository.AppRepository
+import com.spqrta.cloudvideo.repository.FilesRepository
 import com.tbruyelle.rxpermissions2.RxPermissions
 import io.reactivex.Observable
 import io.reactivex.functions.BiFunction
@@ -337,7 +336,7 @@ class VideoFragment : BaseFragment<MainActivity>() {
 
     private fun updateGallery() {
         //todo handle empty
-        galleryAdapter.updateItems(AppRepository.getVideos().map { it.absolutePath })
+        galleryAdapter.updateItems(FilesRepository.getVideos().map { it.absolutePath })
 //        Logg.d(images)
     }
 

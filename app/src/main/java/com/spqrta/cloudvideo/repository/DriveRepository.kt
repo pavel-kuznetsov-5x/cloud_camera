@@ -13,6 +13,7 @@ import com.google.api.services.drive.DriveScopes
 import com.google.api.services.drive.model.FileList
 import com.spqrta.camera2demo.utility.gms.toSingle
 import com.spqrta.camera2demo.utility.gms.toSingleNullable
+import com.spqrta.camera2demo.utility.pure.FileUtils.size
 import com.spqrta.camera2demo.utility.pure.Stub
 import com.spqrta.camera2demo.utility.utils.applySchedulers
 import com.spqrta.cloudvideo.DriveServiceHelper
@@ -98,11 +99,33 @@ object DriveRepository {
         return driveServiceHelper.createFile(file, videosFolderId).toSingle().map { Stub }
     }
 
-    fun getFileUploadState(file: File) {
-
+    @Suppress("SENSELESS_COMPARISON")
+    fun getFileUploadState(file: File): Single<UploadState> {
+        val uploadId = DatabaseRepository.getUploadId(file)
+        if (uploadId == null) {
+            val driveFile = driveServiceHelper.searchFile(file).toSingleNullable().blockingGet().getNullable()
+            if(driveFile != null) {
+                if(file.size() == driveFile.getSize()) {
+                    return Single.just(Completed)
+                }
+            }
+            return Single.just(NotInited)
+        } else {
+            return RequestManager.api.checkUploadStatus(Api.unknownContentRange(), uploadId)
+                .map {
+                    return@map when (it.code()) {
+                        200, 201 -> Completed
+                        308 -> Resumable(
+                                uploadId,
+                                Resumable.parseRangeHeader(it.headers()) ?: 0
+                        )
+                        else -> NotInited
+                    }
+                }
+        }
     }
 
-    fun initResumableUpload(file: File, parentId: String?): Single<ResumableMetadata> {
+    fun initResumableUpload(file: File, parentId: String? = null): Single<ResumableMetadata> {
         return RequestManager.api
                 .initPartialUpload(
                         token = "Bearer ${token}",
@@ -112,6 +135,9 @@ object DriveRepository {
                 .map {
                     ResumableMetadata.fromHeaders(it.headers())
                 }
+            .doOnSuccess {
+                DatabaseRepository.saveUploadId(file, it.uploadId)
+            }
     }
 
     fun uploadChunk(
@@ -173,6 +199,18 @@ object DriveRepository {
                     uploadId = headers["x-guploader-uploadid"]!!,
                     location = headers["location"]!!,
             )
+        }
+    }
+
+    open class UploadState
+    object Completed : UploadState()
+    object NotInited : UploadState()
+    class Resumable(val uploadId: String, val bytesLoaded: Long) : UploadState() {
+        companion object {
+            fun parseRangeHeader(headers: Headers): Long? {
+                return headers.get("Range")?.let {
+                    it.replace("bytes=", "").split("-")[1].toLong() }
+            }
         }
     }
 

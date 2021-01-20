@@ -41,6 +41,13 @@ interface Api {
             @Body file: RequestBody
     ): Single<Response<Void>>
 
+    @PUT("/upload/drive/v3/files")
+    fun checkUploadStatus(
+            @Header("Content-Range")  contentRange: String,
+            @Query("upload_id") uploadId: String,
+            @Query("uploadType") uploadType: String = "resumable",
+    ): Single<Response<Void>>
+
     companion object {
         fun formatContentRange(start: Long, end: Long, total: Long? = null): String {
             if(total != null) {
@@ -48,6 +55,10 @@ interface Api {
             } else {
                 return "bytes $start-$end/*"
             }
+        }
+
+        fun unknownContentRange(): String {
+            return "bytes */*"
         }
     }
 

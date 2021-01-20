@@ -97,6 +97,38 @@ public class DriveServiceHelper {
         });
     }
 
+    public Task<File> searchFile(java.io.File file) {
+        return searchFile(file, null);
+    }
+
+    public Task<File> searchFile(java.io.File file, String parentId) {
+        return Tasks.call(mExecutor, () -> {
+            String pageToken = null;
+            do {
+                Drive.Files.List list = driveService.files().list()
+                        .setSpaces("drive")
+                        .setFields("nextPageToken, files(id, name, size, capabilities)")
+                        .setPageToken(pageToken);
+
+                if(parentId != null) {
+                    list.setQ("name='" + file.getName() + "' and '" + parentId + "' in parents and trashed = false");
+                } else  {
+                    list.setQ("name='" + file.getName() + "' and trashed = false");
+                }
+
+                FileList result = list.execute();
+
+                for (File f : result.getFiles()) {
+                    if (!f.getCapabilities().getCanAddChildren()) {
+                        return f;
+                    }
+                }
+                pageToken = result.getNextPageToken();
+            } while (pageToken != null);
+            return null;
+        });
+    }
+
 
     //todo mime
     public Task<String> createFile(java.io.File file, String folder) {

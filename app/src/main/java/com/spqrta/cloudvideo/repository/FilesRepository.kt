@@ -5,18 +5,15 @@ import com.spqrta.camera2demo.utility.pure.FileUtils.size
 import com.spqrta.cloudvideo.MyApplication
 import java.io.File
 
-object AppRepository {
+object FilesRepository {
+
     fun getVideos(): List<File> {
         return FileUtils.listFiles(MyApplication.VIDEOS_FOLDER).filter { it.size() > 0 }
     }
 
     fun getUnsyncedVideos(): List<File> {
-        return getVideos().filter { !it.name.contains("synced") }
+        val syncedFiles = DatabaseRepository.getSyncedFiles()
+        return getVideos().filter { !syncedFiles.contains(it.name) }
     }
-
-    fun markSynced(file: File) {
-        file.renameTo(File(file.name.replace(".mp4", "")[0]+"_synced.mp4"))
-    }
-
 
 }
