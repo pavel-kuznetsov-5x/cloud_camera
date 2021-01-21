@@ -34,7 +34,7 @@ import kotlinx.android.synthetic.main.fragment_camera.view.*
 import kotlinx.android.synthetic.main.layout_gallery.*
 import java.io.File
 
-//todo repeated video
+
 class VideoFragment : BaseFragment<MainActivity>() {
 
     private val galleryAdapter = GalleryAdapter()
@@ -283,8 +283,7 @@ class VideoFragment : BaseFragment<MainActivity>() {
         RxPermissions(this).requestEach(
             Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
+            Manifest.permission.READ_EXTERNAL_STORAGE
         ).toList().subscribeManaged { list ->
             if (list.all { it.granted }) {
                 permissionsSubject.onNext(true)

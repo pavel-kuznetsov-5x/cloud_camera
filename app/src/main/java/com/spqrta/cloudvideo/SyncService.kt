@@ -19,6 +19,9 @@ import retrofit2.HttpException
 import java.io.File
 import java.io.FileInputStream
 
+//todo notification sound
+//todo delete recording folder
+//todo check not logged in
 //todo clear cache
 //todo load scripts to drive
 //todo risk tests

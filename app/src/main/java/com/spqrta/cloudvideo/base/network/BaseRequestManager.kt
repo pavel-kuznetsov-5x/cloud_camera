@@ -20,7 +20,6 @@ abstract class BaseRequestManager {
         buildRetrofit()
     }
 
-    //todo reusables
     protected fun buildRetrofit() {
         val loggingInterceptor = HttpLoggingInterceptor { message ->
             if (CustomApplication.appConfig.debugMode) {

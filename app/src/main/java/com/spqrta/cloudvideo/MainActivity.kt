@@ -21,6 +21,7 @@ import com.spqrta.cloudvideo.repository.DriveRepository
 import io.reactivex.Single
 import java.lang.IllegalArgumentException
 
+//todo gallery realtime sync indicator
 //todo app name
 class MainActivity : NavActivity(), ErrorToastMixin {
 
@@ -58,7 +59,6 @@ class MainActivity : NavActivity(), ErrorToastMixin {
             unbindService(connection)
             connection.service?.stopForeground(true)
         } catch (e: IllegalArgumentException) {
-            e.printStackTrace()
             //todo
         // java.lang.IllegalArgumentException: Service not registered: com.spqrta.cloudvideo.MainActivity$MyConnection@c35fc10
         }

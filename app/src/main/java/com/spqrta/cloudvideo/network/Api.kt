@@ -24,7 +24,6 @@ interface Api {
         val parents: List<String>
     )
 
-    //todo multipart to reusables
     @PUT("/upload/drive/v3/files")
     fun uploadChunk(
             @Header("Content-Range")  contentRange: String,
