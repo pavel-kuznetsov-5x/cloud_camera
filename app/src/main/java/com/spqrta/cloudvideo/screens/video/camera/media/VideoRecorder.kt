@@ -1,13 +1,11 @@
-package com.spqrta.camera2demo.camera.media
+package com.spqrta.cloudvideo.screens.video.camera.media
 
 import android.media.MediaRecorder
 import android.view.Surface
-import com.spqrta.camera2demo.utility.Logg
-import com.spqrta.camera2demo.utility.Toaster
+import com.spqrta.cloudvideo.utility.Toaster
 import org.threeten.bp.LocalDateTime
 import java.io.File
 import java.lang.Exception
-import java.lang.RuntimeException
 
 open class VideoRecorder(val filesDir: File, val orientation: Int) {
     private lateinit var mediaRecorder: MediaRecorder

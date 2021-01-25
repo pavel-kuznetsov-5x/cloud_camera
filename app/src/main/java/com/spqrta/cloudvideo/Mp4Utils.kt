@@ -1,6 +1,6 @@
 package com.spqrta.cloudvideo
 
-import com.spqrta.camera2demo.utility.pure.FileUtils.size
+import com.spqrta.cloudvideo.utility.pure.FileUtils.size
 import java.io.File
 import java.io.FileInputStream
 

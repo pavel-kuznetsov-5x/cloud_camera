@@ -1,8 +1,8 @@
 package com.spqrta.cloudvideo.repository
 
 import com.google.gson.Gson
-import com.spqrta.camera2demo.utility.pure.Setting
-import com.spqrta.camera2demo.utility.pure.StringSetSetting
+import com.spqrta.cloudvideo.utility.pure.Setting
+import com.spqrta.cloudvideo.utility.pure.StringSetSetting
 import java.io.File
 
 object DatabaseRepository {

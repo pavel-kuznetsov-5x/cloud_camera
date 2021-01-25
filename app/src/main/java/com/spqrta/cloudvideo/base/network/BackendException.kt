@@ -1,6 +1,6 @@
-package com.spqrta.reusables.base.network
+package com.spqrta.cloudvideo.base.network
 
-import com.spqrta.camera2demo.utility.pure.AppUtils
+import com.spqrta.cloudvideo.utility.pure.AppUtils
 import org.json.JSONException
 import org.json.JSONObject
 import retrofit2.Response

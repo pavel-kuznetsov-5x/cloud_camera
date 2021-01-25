@@ -1,10 +1,6 @@
 package com.spqrta.cloudvideo.network
 
-import com.google.api.services.drive.model.User
-import com.spqrta.camera2demo.utility.pure.Stub
-import io.reactivex.Observable
 import io.reactivex.Single
-import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.*

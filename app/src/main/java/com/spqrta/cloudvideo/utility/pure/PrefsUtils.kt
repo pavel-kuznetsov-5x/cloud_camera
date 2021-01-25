@@ -1,7 +1,7 @@
-package com.spqrta.camera2demo.utility.pure
+package com.spqrta.cloudvideo.utility.pure
 
 import android.preference.PreferenceManager
-import com.spqrta.camera2demo.utility.CustomApplication
+import com.spqrta.cloudvideo.utility.CustomApplication
 import org.threeten.bp.ZonedDateTime
 import org.threeten.bp.format.DateTimeFormatter
 

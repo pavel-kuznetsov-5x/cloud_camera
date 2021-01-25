@@ -1,7 +1,7 @@
-package com.spqrta.camera2demo.utility.utils
+package com.spqrta.cloudvideo.utility.utils
 
-import com.spqrta.camera2demo.utility.pure.DeviceInfoUtils.HUAWEI_ELE_L29
-import com.spqrta.camera2demo.utility.pure.DeviceInfoUtils.SAMSUNG_A20_A207
+import com.spqrta.cloudvideo.utility.pure.DeviceInfoUtils.HUAWEI_ELE_L29
+import com.spqrta.cloudvideo.utility.pure.DeviceInfoUtils.SAMSUNG_A20_A207
 
 object PreviewAspectRatio {
 

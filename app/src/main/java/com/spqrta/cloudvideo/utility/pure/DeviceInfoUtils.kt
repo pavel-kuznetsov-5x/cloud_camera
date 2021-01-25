@@ -1,4 +1,4 @@
-package com.spqrta.camera2demo.utility.pure
+package com.spqrta.cloudvideo.utility.pure
 
 import android.annotation.SuppressLint
 import android.app.Activity

@@ -1,4 +1,4 @@
-package com.spqrta.camera2demo.utility.utils
+package com.spqrta.cloudvideo.utility.utils
 
 import org.threeten.bp.*
 import org.threeten.bp.format.DateTimeFormatter

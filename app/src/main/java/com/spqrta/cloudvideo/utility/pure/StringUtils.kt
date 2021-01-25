@@ -1,4 +1,4 @@
-package com.spqrta.camera2demo.utility.pure
+package com.spqrta.cloudvideo.utility.pure
 
 fun String?.emptyIfNull(): String {
     return this ?: ""

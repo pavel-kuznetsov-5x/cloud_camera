@@ -1,4 +1,4 @@
-package com.spqrta.camera2demo.camera.view_wrappers
+package com.spqrta.cloudvideo.screens.video.camera.view_wrappers
 
 import android.util.Size
 import android.view.SurfaceHolder

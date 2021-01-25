@@ -1,4 +1,4 @@
-package com.spqrta.camera2demo.base.display
+package com.spqrta.cloudvideo.base.display
 
 import android.app.Activity
 import android.os.Bundle
@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.spqrta.camera2demo.base.mixins.ErrorToastMixin
+import com.spqrta.cloudvideo.base.mixins.ErrorToastMixin
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable

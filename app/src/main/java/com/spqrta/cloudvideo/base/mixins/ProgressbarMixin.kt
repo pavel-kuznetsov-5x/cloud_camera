@@ -1,11 +1,11 @@
-package com.spqrta.camera2demo.base.mixins
+package com.spqrta.cloudvideo.base.mixins
 
 import android.view.View
-import com.spqrta.camera2demo.base.display.JustLoading
-import com.spqrta.camera2demo.base.display.Payload
-import com.spqrta.camera2demo.base.display.State
-import com.spqrta.camera2demo.utility.pure.hide
-import com.spqrta.camera2demo.utility.pure.show
+import com.spqrta.cloudvideo.base.display.JustLoading
+import com.spqrta.cloudvideo.base.display.Payload
+import com.spqrta.cloudvideo.base.display.State
+import com.spqrta.cloudvideo.utility.pure.hide
+import com.spqrta.cloudvideo.utility.pure.show
 
 interface ProgressbarMixin {
 

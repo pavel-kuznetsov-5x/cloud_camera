@@ -1,8 +1,8 @@
 package com.spqrta.cloudvideo
 //todo packages
 
-import com.spqrta.camera2demo.utility.CustomApplication
-import com.spqrta.camera2demo.utility.pure.FileUtils
+import com.spqrta.cloudvideo.utility.CustomApplication
+import com.spqrta.cloudvideo.utility.pure.FileUtils
 import java.io.File
 
 class MyApplication : CustomApplication() {

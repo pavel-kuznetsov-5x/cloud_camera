@@ -1,6 +1,6 @@
-package com.spqrta.reusables.base.network
+package com.spqrta.cloudvideo.base.network
 
-import com.spqrta.camera2demo.utility.CustomApplication
+import com.spqrta.cloudvideo.utility.CustomApplication
 import com.spqrta.cloudvideo.R
 
 class NetworkError: Throwable() {

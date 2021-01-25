@@ -1,7 +1,7 @@
-package com.spqrta.camera2demo.utility.gms
+package com.spqrta.cloudvideo.utility.gms
 
 import com.google.android.gms.tasks.Task
-import com.spqrta.camera2demo.utility.pure.Optional
+import com.spqrta.cloudvideo.utility.pure.Optional
 import io.reactivex.Single
 import io.reactivex.subjects.SingleSubject
 

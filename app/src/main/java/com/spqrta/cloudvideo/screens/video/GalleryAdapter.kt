@@ -2,7 +2,7 @@ package com.spqrta.cloudvideo.screens.video
 
 import android.view.View
 import com.bumptech.glide.Glide
-import com.spqrta.camera2demo.utility.recycler.BaseAdapter
+import com.spqrta.cloudvideo.utility.recycler.BaseAdapter
 import com.spqrta.cloudvideo.R
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.item_gallery_image.view.*

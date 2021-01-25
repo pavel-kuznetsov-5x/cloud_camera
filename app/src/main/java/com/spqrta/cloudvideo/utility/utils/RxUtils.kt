@@ -1,9 +1,9 @@
-package com.spqrta.camera2demo.utility.utils
+package com.spqrta.cloudvideo.utility.utils
 
 import android.view.View
-import com.spqrta.camera2demo.utility.pure.Stub
-import com.spqrta.camera2demo.utility.pure.hide
-import com.spqrta.camera2demo.utility.pure.show
+import com.spqrta.cloudvideo.utility.pure.Stub
+import com.spqrta.cloudvideo.utility.pure.hide
+import com.spqrta.cloudvideo.utility.pure.show
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers

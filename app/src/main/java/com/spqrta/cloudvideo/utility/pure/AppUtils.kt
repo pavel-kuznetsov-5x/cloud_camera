@@ -1,6 +1,6 @@
-package com.spqrta.camera2demo.utility.pure
+package com.spqrta.cloudvideo.utility.pure
 
-import com.spqrta.camera2demo.utility.CustomApplication
+import com.spqrta.cloudvideo.utility.CustomApplication
 
 object AppUtils {
     fun ifDebugMode(func: () -> Unit) {

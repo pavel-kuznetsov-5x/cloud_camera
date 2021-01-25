@@ -1,4 +1,4 @@
-package com.spqrta.camera2demo.utility
+package com.spqrta.cloudvideo.utility
 
 class Meter(
     private val tag: String = "",

@@ -1,8 +1,8 @@
-package com.spqrta.camera2demo.base.delegates
+package com.spqrta.cloudvideo.base.delegates
 
 import android.os.Bundle
-import com.spqrta.camera2demo.base.display.BaseFragment
-import com.spqrta.camera2demo.utility.CustomApplication
+import com.spqrta.cloudvideo.base.display.BaseFragment
+import com.spqrta.cloudvideo.utility.CustomApplication
 import com.spqrta.cloudvideo.MainActivity
 
 open class StateDelegate<T>(

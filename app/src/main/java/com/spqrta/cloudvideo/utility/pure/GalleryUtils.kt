@@ -1,4 +1,4 @@
-package com.spqrta.camera2demo.utility.pure
+package com.spqrta.cloudvideo.utility.pure
 
 import android.app.Activity
 import android.database.Cursor

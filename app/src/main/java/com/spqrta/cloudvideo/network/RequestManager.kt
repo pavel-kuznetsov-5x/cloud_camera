@@ -1,6 +1,6 @@
 package com.spqrta.cloudvideo.network
 
-import com.spqrta.reusables.base.network.BaseRequestManager
+import com.spqrta.cloudvideo.base.network.BaseRequestManager
 
 object RequestManager: BaseRequestManager() {
 

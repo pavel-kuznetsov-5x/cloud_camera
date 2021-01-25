@@ -1,4 +1,4 @@
-package com.spqrta.camera2demo.utility.recycler
+package com.spqrta.cloudvideo.utility.recycler
 
 import androidx.recyclerview.widget.LinearLayoutManager
 

@@ -1,4 +1,4 @@
-package com.spqrta.camera2demo.utility.recycler
+package com.spqrta.cloudvideo.utility.recycler
 
 import android.view.LayoutInflater
 import android.view.View

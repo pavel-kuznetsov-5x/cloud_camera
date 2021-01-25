@@ -1,4 +1,4 @@
-package com.spqrta.camera2demo.utility.pure
+package com.spqrta.cloudvideo.utility.pure
 
 import android.app.Activity
 import android.app.DatePickerDialog
@@ -20,8 +20,8 @@ import androidx.lifecycle.MutableLiveData
 import org.json.JSONArray
 import org.json.JSONObject
 import org.threeten.bp.LocalDate
-import com.spqrta.camera2demo.utility.CustomApplication
-import com.spqrta.camera2demo.utility.CustomApplication.Companion.context
+import com.spqrta.cloudvideo.utility.CustomApplication
+import com.spqrta.cloudvideo.utility.CustomApplication.Companion.context
 import java.io.InputStream
 import kotlin.math.pow
 import kotlin.math.round

@@ -1,10 +1,10 @@
-package com.spqrta.camera2demo.base.mixins
+package com.spqrta.cloudvideo.base.mixins
 
-import com.spqrta.camera2demo.utility.CustomApplication
-import com.spqrta.camera2demo.base.display.Payload
-import com.spqrta.camera2demo.base.display.State
-import com.spqrta.camera2demo.utility.Toaster
-import com.spqrta.camera2demo.base.display.JustError
+import com.spqrta.cloudvideo.utility.CustomApplication
+import com.spqrta.cloudvideo.base.display.Payload
+import com.spqrta.cloudvideo.base.display.State
+import com.spqrta.cloudvideo.utility.Toaster
+import com.spqrta.cloudvideo.base.display.JustError
 
 interface ErrorToastMixin {
 

@@ -1,4 +1,4 @@
-package com.spqrta.camera2demo.base.display
+package com.spqrta.cloudvideo.base.display
 
 import androidx.lifecycle.MutableLiveData
 

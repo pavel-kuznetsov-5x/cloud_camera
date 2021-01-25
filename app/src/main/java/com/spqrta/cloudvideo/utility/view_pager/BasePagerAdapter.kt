@@ -1,4 +1,4 @@
-package com.spqrta.camera2demo.utility.view_pager
+package com.spqrta.cloudvideo.utility.view_pager
 
 import androidx.viewpager.widget.PagerAdapter
 

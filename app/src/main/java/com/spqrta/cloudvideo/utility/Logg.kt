@@ -1,4 +1,4 @@
-package com.spqrta.camera2demo.utility
+package com.spqrta.cloudvideo.utility
 
 import android.util.Log
 
@@ -44,7 +44,7 @@ object Logg {
     }
 
     fun thread(tag: String = "") {
-        Logg.d("$tag - ${Thread.currentThread().name}")
+        d("$tag - ${Thread.currentThread().name}")
     }
 
     interface LogConsumer {

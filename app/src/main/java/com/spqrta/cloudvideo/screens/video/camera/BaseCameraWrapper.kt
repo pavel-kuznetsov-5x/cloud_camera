@@ -1,4 +1,4 @@
-package com.spqrta.camera2demo.camera
+package com.spqrta.cloudvideo.screens.video.camera
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -16,12 +16,12 @@ import android.util.Size
 import android.util.SparseIntArray
 import android.view.Surface
 import androidx.core.content.ContextCompat
-import com.spqrta.camera2demo.utility.CustomApplication
-import com.spqrta.camera2demo.utility.Logg
-import com.spqrta.camera2demo.utility.Meter
+import com.spqrta.cloudvideo.utility.CustomApplication
+import com.spqrta.cloudvideo.utility.Logg
+import com.spqrta.cloudvideo.utility.Meter
 import com.spqrta.cloudvideo.utility.SubscriptionManager
-import com.spqrta.camera2demo.utility.pure.aspectRatio
-import com.spqrta.camera2demo.utility.pure.toStringWh
+import com.spqrta.cloudvideo.utility.pure.aspectRatio
+import com.spqrta.cloudvideo.utility.pure.toStringWh
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers

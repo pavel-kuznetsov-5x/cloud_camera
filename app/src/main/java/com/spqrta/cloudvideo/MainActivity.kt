@@ -6,23 +6,11 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import androidx.core.content.ContextCompat
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.api.client.extensions.android.http.AndroidHttp
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
-import com.google.api.client.json.gson.GsonFactory
-import com.google.api.services.drive.Drive
-import com.google.api.services.drive.DriveScopes
-import com.google.api.services.drive.model.FileList
-import com.spqrta.camera2demo.base.display.NavActivity
-import com.spqrta.camera2demo.base.mixins.ErrorToastMixin
-import com.spqrta.camera2demo.utility.gms.toSingle
+import com.spqrta.cloudvideo.base.display.NavActivity
+import com.spqrta.cloudvideo.base.mixins.ErrorToastMixin
 import com.spqrta.cloudvideo.repository.DriveRepository
-import io.reactivex.Single
 import java.lang.IllegalArgumentException
 
-//todo gallery realtime sync indicator
-//todo app name
 class MainActivity : NavActivity(), ErrorToastMixin {
 
     override val layoutRes = R.layout.activity_nav
@@ -59,13 +47,13 @@ class MainActivity : NavActivity(), ErrorToastMixin {
             unbindService(connection)
             connection.service?.stopForeground(true)
         } catch (e: IllegalArgumentException) {
-            //todo
-        // java.lang.IllegalArgumentException: Service not registered: com.spqrta.cloudvideo.MainActivity$MyConnection@c35fc10
+            if(e.message?.contains("Service not registered") == false) {
+                throw e
+            }
         }
         connection.bound = false
     }
 
-    //todo empty videos on start
     private fun bindService() {
         bindService(Intent(this, SyncService::class.java), connection, 0)
     }

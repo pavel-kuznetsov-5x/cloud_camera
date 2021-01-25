@@ -1,14 +1,12 @@
-package com.spqrta.camera2demo.camera
+package com.spqrta.cloudvideo.screens.video.camera
 
 import android.annotation.SuppressLint
 import android.util.Size
 import android.view.Surface
-import com.spqrta.camera2demo.camera.media.VideoRecorder
-import com.spqrta.camera2demo.utility.Toaster
+import com.spqrta.cloudvideo.screens.video.camera.media.VideoRecorder
 import com.spqrta.cloudvideo.MyApplication
 import io.reactivex.subjects.BehaviorSubject
 import java.io.File
-import java.lang.RuntimeException
 
 @Suppress("JoinDeclarationAndAssignment")
 @SuppressLint("NewApi")

@@ -1,11 +1,9 @@
-package com.spqrta.reusables.base.network
+package com.spqrta.cloudvideo.base.network
 
-import com.spqrta.camera2demo.utility.CustomApplication
-import com.spqrta.camera2demo.utility.Logg
+import com.spqrta.cloudvideo.utility.CustomApplication
+import com.spqrta.cloudvideo.utility.Logg
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import org.json.JSONException
-import org.json.JSONObject
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory

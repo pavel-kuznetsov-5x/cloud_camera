@@ -1,7 +1,7 @@
-package com.spqrta.camera2demo.utility.pure
+package com.spqrta.cloudvideo.utility.pure
 
 import android.content.Context
-import com.spqrta.camera2demo.utility.CustomApplication
+import com.spqrta.cloudvideo.utility.CustomApplication
 
 object DpUtils {
     fun dpToPx(dp: Int, context: Context? = null): Float {

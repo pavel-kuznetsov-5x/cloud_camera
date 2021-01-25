@@ -6,9 +6,9 @@ import android.content.Intent
 import android.os.*
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat.getSystemService
-import com.spqrta.camera2demo.utility.Logg
-import com.spqrta.camera2demo.utility.pure.FileUtils.size
-import com.spqrta.camera2demo.utility.pure.Stub
+import com.spqrta.cloudvideo.utility.Logg
+import com.spqrta.cloudvideo.utility.pure.FileUtils.size
+import com.spqrta.cloudvideo.utility.pure.Stub
 import com.spqrta.cloudvideo.base.BaseService
 import com.spqrta.cloudvideo.repository.FilesRepository
 import com.spqrta.cloudvideo.repository.DriveRepository
@@ -19,12 +19,8 @@ import retrofit2.HttpException
 import java.io.File
 import java.io.FileInputStream
 
-//todo notification sound
-//todo delete recording folder
-//todo check not logged in
+//todo delete recording folder from drive
 //todo clear cache
-//todo load scripts to drive
-//todo risk tests
 //todo test long video
 class SyncService : BaseService() {
 
@@ -365,7 +361,7 @@ class SyncService : BaseService() {
 
         notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
         val notification: Notification = notificationBuilder
-            .setOnlyAlertOnce(true)
+            .setSound(null)
             .setContentTitle(TITLE)
             .setContentText(text)
             .setSmallIcon(R.drawable.ic_launcher)

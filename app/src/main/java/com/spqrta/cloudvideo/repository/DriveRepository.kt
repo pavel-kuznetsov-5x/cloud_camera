@@ -11,11 +11,11 @@ import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.google.api.services.drive.model.FileList
-import com.spqrta.camera2demo.utility.gms.toSingle
-import com.spqrta.camera2demo.utility.gms.toSingleNullable
-import com.spqrta.camera2demo.utility.pure.FileUtils.size
-import com.spqrta.camera2demo.utility.pure.Stub
-import com.spqrta.camera2demo.utility.utils.applySchedulers
+import com.spqrta.cloudvideo.utility.gms.toSingle
+import com.spqrta.cloudvideo.utility.gms.toSingleNullable
+import com.spqrta.cloudvideo.utility.pure.FileUtils.size
+import com.spqrta.cloudvideo.utility.pure.Stub
+import com.spqrta.cloudvideo.utility.utils.applySchedulers
 import com.spqrta.cloudvideo.DriveServiceHelper
 import com.spqrta.cloudvideo.MainActivity
 import com.spqrta.cloudvideo.network.Api
