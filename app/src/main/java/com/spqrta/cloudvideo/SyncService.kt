@@ -22,6 +22,7 @@ import java.io.FileInputStream
 //todo delete recording folder from drive
 //todo clear cache
 //todo test long video
+@SuppressLint("CheckResult")
 class SyncService : BaseService() {
 
     private val binder = MyBinder()
@@ -171,12 +172,10 @@ class SyncService : BaseService() {
                             updateStateNotification(unsyncedVideos = unsyncedVideos.size - i)
                             syncVideo(it).blockingGet()
                         }
-                    updateStateNotification(unsyncedVideos = 0)
-                    newSyncIteration(handler)
-                } else {
-                    updateStateNotification(unsyncedVideos = 0)
-                    finishSync()
                 }
+                DriveRepository.removeRecordingFoldersForSyncedVideos().blockingGet()
+                updateStateNotification(unsyncedVideos = 0)
+                finishSync()
             }
         }
     }

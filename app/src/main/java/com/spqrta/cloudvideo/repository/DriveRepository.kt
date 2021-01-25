@@ -16,15 +16,17 @@ import com.spqrta.cloudvideo.utility.gms.toSingleNullable
 import com.spqrta.cloudvideo.utility.pure.FileUtils.size
 import com.spqrta.cloudvideo.utility.pure.Stub
 import com.spqrta.cloudvideo.utility.utils.applySchedulers
-import com.spqrta.cloudvideo.DriveServiceHelper
+import com.spqrta.cloudvideo.DriveApiWrapper
 import com.spqrta.cloudvideo.MainActivity
 import com.spqrta.cloudvideo.network.Api
 import com.spqrta.cloudvideo.network.RequestManager
+import com.spqrta.cloudvideo.utility.Logg
 import io.reactivex.schedulers.Schedulers
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import java.io.File
 import io.reactivex.*
+import io.reactivex.functions.BiFunction
 import okhttp3.Headers
 import java.lang.Exception
 
@@ -33,7 +35,7 @@ object DriveRepository {
 
     private const val REQUEST_CODE_SIGN_IN = 1
 
-    private lateinit var driveServiceHelper: DriveServiceHelper
+    private lateinit var DriveApiWrapper: DriveApiWrapper
 
     lateinit var videosFolderId: String
 
@@ -42,49 +44,49 @@ object DriveRepository {
 
     fun initForResult(activity: MainActivity) {
         val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .requestScopes(Scope(DriveScopes.DRIVE_FILE))
-                .build()
+            .requestEmail()
+            .requestScopes(Scope(DriveScopes.DRIVE_FILE))
+            .build()
         val client = GoogleSignIn.getClient(activity, signInOptions)
 
         activity.startActivityForResult(client.signInIntent, REQUEST_CODE_SIGN_IN)
     }
 
     fun onInitResult(
-            activity: MainActivity,
-            requestCode: Int,
-            resultCode: Int,
-            resultData: Intent?
+        activity: MainActivity,
+        requestCode: Int,
+        resultCode: Int,
+        resultData: Intent?
     ): Single<Stub> {
         when (requestCode) {
             REQUEST_CODE_SIGN_IN -> if (resultCode == AppCompatActivity.RESULT_OK && resultData != null) {
                 return GoogleSignIn.getSignedInAccountFromIntent(resultData).toSingle()
-                        .observeOn(Schedulers.io())
-                        .doOnSuccess { googleAccount ->
-                            val credential = GoogleAccountCredential.usingOAuth2(
-                                    activity, setOf(DriveScopes.DRIVE_FILE)
-                            )
-                            credential.selectedAccount = googleAccount.account
-                            token = credential.token
-                            val googleDriveService = Drive.Builder(
-                                    AndroidHttp.newCompatibleTransport(),
-                                    GsonFactory(),
-                                    credential
-                            )
-                                    .setApplicationName("Drive API Migration")
-                                    .build()
+                    .observeOn(Schedulers.io())
+                    .doOnSuccess { googleAccount ->
+                        val credential = GoogleAccountCredential.usingOAuth2(
+                            activity, setOf(DriveScopes.DRIVE_FILE)
+                        )
+                        credential.selectedAccount = googleAccount.account
+                        token = credential.token
+                        val googleDriveService = Drive.Builder(
+                            AndroidHttp.newCompatibleTransport(),
+                            GsonFactory(),
+                            credential
+                        )
+                            .setApplicationName("Drive API Migration")
+                            .build()
 
-                            driveServiceHelper = DriveServiceHelper(googleDriveService)
-                        }
-                        .flatMap {
-                            ensureFolderExists(File("CloudCamera"))
-                                    .subscribeOn(Schedulers.io())
-                        }
-                        .doOnSuccess {
-                            videosFolderId = it
-                        }
-                        .applySchedulers()
-                        .map { Stub }
+                        DriveApiWrapper = DriveApiWrapper(googleDriveService)
+                    }
+                    .flatMap {
+                        ensureFolderExists(File("CloudCamera"))
+                            .subscribeOn(Schedulers.io())
+                    }
+                    .doOnSuccess {
+                        videosFolderId = it
+                    }
+                    .applySchedulers()
+                    .map { Stub }
             }
         }
         return Single.never()
@@ -92,20 +94,21 @@ object DriveRepository {
 
     //todo pagination
     fun getDriveVideos(): Single<FileList> {
-        return driveServiceHelper.queryFiles(videosFolderId).toSingle()
+        return DriveApiWrapper.getFiles(videosFolderId).toSingle()
     }
 
     fun saveVideo(file: File): Single<Stub> {
-        return driveServiceHelper.createFile(file, videosFolderId).toSingle().map { Stub }
+        return DriveApiWrapper.createFile(file, videosFolderId).toSingle().map { Stub }
     }
 
     @Suppress("SENSELESS_COMPARISON")
     fun getFileUploadState(file: File): Single<UploadState> {
         val uploadId = DatabaseRepository.getUploadId(file)
         if (uploadId == null) {
-            val driveFile = driveServiceHelper.searchFile(file).toSingleNullable().blockingGet().getNullable()
-            if(driveFile != null) {
-                if(file.size() == driveFile.getSize()) {
+            val driveFile =
+                DriveApiWrapper.searchFile(file).toSingleNullable().blockingGet().getNullable()
+            if (driveFile != null) {
+                if (file.size() == driveFile.getSize()) {
                     return Single.just(Completed)
                 }
             }
@@ -116,8 +119,8 @@ object DriveRepository {
                     return@map when (it.code()) {
                         200, 201 -> Completed
                         308 -> Resumable(
-                                uploadId,
-                                Resumable.parseRangeHeader(it.headers()) ?: 0
+                            uploadId,
+                            Resumable.parseRangeHeader(it.headers()) ?: 0
                         )
                         else -> NotInited
                     }
@@ -127,77 +130,102 @@ object DriveRepository {
 
     fun initResumableUpload(file: File, parentId: String? = null): Single<ResumableMetadata> {
         return RequestManager.api
-                .initPartialUpload(
-                        token = "Bearer ${token}",
-                        metadata = Api.Metadata(file.name, listOf(parentId ?: videosFolderId))
-                )
-                .applySchedulers()
-                .map {
-                    ResumableMetadata.fromHeaders(it.headers())
-                }
+            .initPartialUpload(
+                token = "Bearer ${token}",
+                metadata = Api.Metadata(file.name, listOf(parentId ?: videosFolderId))
+            )
+            .applySchedulers()
+            .map {
+                ResumableMetadata.fromHeaders(it.headers())
+            }
             .doOnSuccess {
                 DatabaseRepository.saveUploadId(file, it.uploadId)
             }
     }
 
     fun uploadChunk(
-            uploadId: String,
-            byteArray: ByteArray,
-            offset: Long,
-            finalSize: Long? = null,
-            edit: Boolean = false
+        uploadId: String,
+        byteArray: ByteArray,
+        offset: Long,
+        finalSize: Long? = null,
+        edit: Boolean = false
     ): Single<Stub> {
         val fbody = RequestBody.create(MediaType.parse("video/mp4"), byteArray)
 
         val contentRange = Api.formatContentRange(
-                offset, offset + byteArray.size.toLong() - 1, finalSize)
+            offset, offset + byteArray.size.toLong() - 1, finalSize
+        )
 
         return if (edit) {
             RequestManager.api
-                    .editChunk(
-                            contentRange = contentRange, uploadId = uploadId, file = fbody
-                    )
+                .editChunk(
+                    contentRange = contentRange, uploadId = uploadId, file = fbody
+                )
         } else {
             RequestManager.api
-                    .uploadChunk(
-                            contentRange = contentRange, uploadId = uploadId, file = fbody
-                    )
+                .uploadChunk(
+                    contentRange = contentRange, uploadId = uploadId, file = fbody
+                )
         }
-                .subscribeOn(Schedulers.io())
-                .doOnSuccess {
-                    if (!it.isSuccessful && it.code() != 308) {
-                        throw Exception("${it.raw().request().headers()["Content-Range"]} | ${it.errorBody()!!.string()}")
-                    }
+            .subscribeOn(Schedulers.io())
+            .doOnSuccess {
+                if (!it.isSuccessful && it.code() != 308) {
+                    throw Exception(
+                        "${it.raw().request().headers()["Content-Range"]} | ${it.errorBody()!!
+                            .string()}"
+                    )
                 }
-                .map { Stub }
+            }
+            .map { Stub }
     }
 
     fun uploadFileBytes(name: String, bytes: ByteArray, parentId: String?): Single<Stub> {
         return initResumableUpload(File(name), parentId)
-                .flatMap {
-                    uploadChunk(it.uploadId, bytes, 0, bytes.size.toLong())
-                }
+            .flatMap {
+                uploadChunk(it.uploadId, bytes, 0, bytes.size.toLong())
+            }
     }
 
     fun ensureFolderExists(file: File, parentId: String? = null): Single<String> {
-        return driveServiceHelper.searchFolder(file, parentId).toSingleNullable()
-                .flatMap {
-                    if (it.isEmpty) {
-                        driveServiceHelper.createFolder(file, parentId).toSingle()
-                    } else {
-                        Single.just(it.get())
+        return DriveApiWrapper.searchFolder(file, parentId).toSingleNullable()
+            .flatMap {
+                if (it.isEmpty) {
+                    DriveApiWrapper.createFolder(file, parentId).toSingle()
+                } else {
+                    Single.just(it.get())
+                }
+            }
+    }
+
+    fun removeRecordingFoldersForSyncedVideos(): Single<Stub> {
+        return Single.zip(
+            DriveApiWrapper.getFiles(videosFolderId).toSingle(),
+            DriveApiWrapper.getFolders(videosFolderId).toSingle(),
+            BiFunction<FileList, FileList, Stub> { files, folders ->
+                check(folders.files.firstOrNull()?.capabilities!!.canAddChildren)
+                check(files.files.firstOrNull()?.capabilities!!.canAddChildren.not())
+                for (folder in folders.files) {
+                    for(f in files.files) {
+                        if(f.name == folder.name) {
+                            check(folder.capabilities!!.canAddChildren)
+                            //todo check size before deletion
+                            DriveApiWrapper.deleteFile(folder.id)
+                        }
                     }
                 }
+                Stub
+            }
+        )
     }
 
     data class ResumableMetadata(
-            val uploadId: String,
-            val location: String,
+        val uploadId: String,
+        val location: String,
     ) {
         companion object {
             fun fromHeaders(headers: Headers) = ResumableMetadata(
-                    uploadId = headers["x-guploader-uploadid"]!!,
-                    location = headers["location"]!!,
+                uploadId = headers["x-guploader-uploadid"]!!,
+                location = headers["location"]!!,
             )
         }
     }
@@ -209,7 +237,8 @@ object DriveRepository {
         companion object {
             fun parseRangeHeader(headers: Headers): Long? {
                 return headers.get("Range")?.let {
-                    it.replace("bytes=", "").split("-")[1].toLong() }
+                    it.replace("bytes=", "").split("-")[1].toLong()
+                }
             }
         }
     }
